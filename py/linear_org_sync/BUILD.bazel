@@ -35,8 +35,8 @@ py_pytest_main(
 
 py_test(
     name = "linear_org_sync_test",
+    size = "small",
     srcs = [
-        "conftest.py",
         "config_test.py",
         "linear_client_test.py",
         "org_writer_test.py",

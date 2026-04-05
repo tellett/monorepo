@@ -2,6 +2,7 @@ import pathlib
 import textwrap
 
 import pytest
+from pydantic import ValidationError
 
 from py.linear_org_sync.config import (
     AssignedSource,
@@ -92,7 +93,7 @@ def test_unknown_source_type_raises(tmp_path):
         sources:
           - type: unknown
     """))
-    with pytest.raises(Exception):
+    with pytest.raises(ValidationError):
         load_config(config_file)
 
 
