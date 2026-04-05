@@ -128,6 +128,7 @@ py_binary(
     srcs = glob(["*.py"]),
     deps = [
         "//requirements:httpx",
+        "//requirements:pydantic",
         "//requirements:pyyaml",
     ],
     main = "__main__.py",
@@ -135,7 +136,7 @@ py_binary(
 )
 ```
 
-Dependencies: `httpx` (Linear GraphQL over HTTPS), `pyyaml` (config parsing). Both require entries in the monorepo's requirements pinning.
+Dependencies: `httpx` (Linear GraphQL over HTTPS), `pyyaml` (config parsing), `pydantic` (config and data model validation). All require entries in the monorepo's requirements pinning.
 
 Invoked as:
 ```
