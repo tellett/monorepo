@@ -29,16 +29,23 @@ def _issue_node(
 
 def test_get_assigned_issues_returns_issues():
     with patch("httpx.Client.post") as mock_post:
-        mock_post.return_value = _mock_response({
-            "viewer": {
-                "assignedIssues": {
-                    "nodes": [
-                        _issue_node("ENG-1", "Fix bug", 2,
-                                    state_name="In Progress", state_type="started"),
-                    ]
+        mock_post.return_value = _mock_response(
+            {
+                "viewer": {
+                    "assignedIssues": {
+                        "nodes": [
+                            _issue_node(
+                                "ENG-1",
+                                "Fix bug",
+                                2,
+                                state_name="In Progress",
+                                state_type="started",
+                            ),
+                        ]
+                    }
                 }
             }
-        })
+        )
         client = LinearClient("lin_api_test")
         issues = client.get_assigned_issues()
         assert len(issues) == 1
@@ -49,9 +56,9 @@ def test_get_assigned_issues_returns_issues():
 
 def test_get_assigned_issues_empty():
     with patch("httpx.Client.post") as mock_post:
-        mock_post.return_value = _mock_response({
-            "viewer": {"assignedIssues": {"nodes": []}}
-        })
+        mock_post.return_value = _mock_response(
+            {"viewer": {"assignedIssues": {"nodes": []}}}
+        )
         client = LinearClient("lin_api_test")
         issues = client.get_assigned_issues()
         assert issues == []
@@ -59,15 +66,15 @@ def test_get_assigned_issues_empty():
 
 def test_get_team_issues_returns_issues():
     with patch("httpx.Client.post") as mock_post:
-        mock_post.return_value = _mock_response({
-            "teams": {
-                "nodes": [{
-                    "issues": {
-                        "nodes": [_issue_node("ENG-2", "Team task")]
-                    }
-                }]
+        mock_post.return_value = _mock_response(
+            {
+                "teams": {
+                    "nodes": [
+                        {"issues": {"nodes": [_issue_node("ENG-2", "Team task")]}}
+                    ]
+                }
             }
-        })
+        )
         client = LinearClient("lin_api_test")
         issues = client.get_team_issues("eng")
         assert len(issues) == 1
@@ -76,9 +83,7 @@ def test_get_team_issues_returns_issues():
 
 def test_get_team_issues_unknown_slug_returns_empty():
     with patch("httpx.Client.post") as mock_post:
-        mock_post.return_value = _mock_response({
-            "teams": {"nodes": []}
-        })
+        mock_post.return_value = _mock_response({"teams": {"nodes": []}})
         client = LinearClient("lin_api_test")
         issues = client.get_team_issues("nonexistent")
         assert issues == []
@@ -86,16 +91,23 @@ def test_get_team_issues_unknown_slug_returns_empty():
 
 def test_get_project_issues_returns_issues():
     with patch("httpx.Client.post") as mock_post:
-        mock_post.return_value = _mock_response({
-            "project": {
-                "issues": {
-                    "nodes": [
-                        _issue_node("ENG-3", "Project task", 1,
-                                    state_name="In Review", state_type="started"),
-                    ]
+        mock_post.return_value = _mock_response(
+            {
+                "project": {
+                    "issues": {
+                        "nodes": [
+                            _issue_node(
+                                "ENG-3",
+                                "Project task",
+                                1,
+                                state_name="In Review",
+                                state_type="started",
+                            ),
+                        ]
+                    }
                 }
             }
-        })
+        )
         client = LinearClient("lin_api_test")
         issues = client.get_project_issues("proj-id-123")
         assert len(issues) == 1
@@ -104,11 +116,13 @@ def test_get_project_issues_returns_issues():
 
 
 def test_linear_client_context_manager_closes():
-    with patch("httpx.Client.post") as mock_post, \
-         patch("httpx.Client.close") as mock_close:
-        mock_post.return_value = _mock_response({
-            "viewer": {"assignedIssues": {"nodes": []}}
-        })
+    with (
+        patch("httpx.Client.post") as mock_post,
+        patch("httpx.Client.close") as mock_close,
+    ):
+        mock_post.return_value = _mock_response(
+            {"viewer": {"assignedIssues": {"nodes": []}}}
+        )
         with LinearClient("lin_api_test") as client:
             client.get_assigned_issues()
         mock_close.assert_called_once()

@@ -8,29 +8,29 @@ py_library(
         "linear_client.py",
         "org_writer.py",
     ],
+    visibility = ["//:__subpackages__"],
     deps = [
         "@pip//httpx",
         "@pip//pydantic",
         "@pip//pyyaml",
     ],
-    visibility = ["//:__subpackages__"],
 )
 
 py_binary(
     name = "linear_org_sync",
     srcs = ["__main__.py"],
     main = "__main__.py",
+    visibility = ["//visibility:private"],
     deps = [
         ":linear_org_sync_lib",
         "@pip//absl_py",
     ],
-    visibility = ["//visibility:private"],
 )
 
 py_pytest_main(
     name = "__test__",
-    deps = ["@pip//pytest"],
     args = ["--import-mode=importlib"],
+    deps = ["@pip//pytest"],
 )
 
 py_test(
@@ -46,6 +46,6 @@ py_test(
     deps = [
         ":__test__",
         ":linear_org_sync_lib",
-        "//py:py",
+        "//py",
     ],
 )

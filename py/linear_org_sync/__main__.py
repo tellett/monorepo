@@ -4,7 +4,12 @@ import pathlib
 
 from absl import app, flags, logging
 
-from py.linear_org_sync.config import AssignedSource, ProjectSource, TeamSource, load_config
+from py.linear_org_sync.config import (
+    AssignedSource,
+    ProjectSource,
+    TeamSource,
+    load_config,
+)
 from py.linear_org_sync.linear_client import LinearClient
 from py.linear_org_sync.org_writer import write_org_file
 

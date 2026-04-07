@@ -1,0 +1,79 @@
+bazel_dep(name = "aspect_bazel_lib", version = "2.22.5")
+
+# rules_nodejs 6.5.2 uses CcInfo without loading it; this is broken in Bazel 9.
+# Force 6.7.3 which adds the explicit load statement.
+single_version_override(
+    module_name = "rules_nodejs",
+    version = "6.7.3",
+)
+
+bazel_dep(name = "aspect_rules_lint", version = "2.3.0")
+bazel_dep(name = "buildifier_prebuilt", version = "8.5.1.2")
+bazel_dep(name = "rules_multitool", version = "1.11.1")
+bazel_dep(name = "rules_python", version = "1.9.0-rc1")
+bazel_dep(name = "rules_python_gazelle_plugin", version = "1.9.0-rc1")
+bazel_dep(name = "aspect_rules_py", version = "1.10.0")
+bazel_dep(name = "rules_uv", version = "0.89.2")
+bazel_dep(name = "rules_go", version = "0.60.0")
+bazel_dep(name = "gazelle", version = "0.48.0")
+bazel_dep(name = "rules_shell", version = "0.7.1")
+bazel_dep(name = "rules_oci", version = "2.3.0")
+bazel_dep(name = "platforms", version = "1.0.0")
+
+multitool = use_extension("@rules_multitool//multitool:extension.bzl", "multitool")
+multitool.hub(lockfile = "//tools:tools.lock.json")
+use_repo(multitool, "multitool")
+
+#########################
+# Go
+go_sdk = use_extension("@rules_go//go:extensions.bzl", "go_sdk")
+go_sdk.nogo(nogo = "//tools/lint:nogo")
+
+go_deps = use_extension("@gazelle//:extensions.bzl", "go_deps")
+go_deps.from_file(go_mod = "//:go.mod")
+use_repo(
+    go_deps,
+    "org_uber_go_fx",
+    "org_uber_go_zap",
+)
+
+#########################
+# Hermetic Python interpreter and pip dependencies
+pip = use_extension("@rules_python//python/extensions:pip.bzl", "pip")
+
+python = use_extension("@rules_python//python/extensions:python.bzl", "python")
+python.toolchain(
+    python_version = "3.12",
+)
+
+pip.parse(
+    hub_name = "pip",
+    python_version = "3.12",
+    requirements_lock = "//requirements:all.txt",
+)
+use_repo(pip, "pip")
+
+oci = use_extension("@rules_oci//oci:extensions.bzl", "oci")
+
+# Base image for GO Containers.
+oci.pull(
+    name = "distroless_base",
+    digest = "sha256:74ddbf52d93fafbdd21b399271b0b4aac1babf8fa98cab59e5692e01169a1348",
+    image = "gcr.io/distroless/base",
+    platforms = [
+        "linux/amd64",
+        "linux/arm64",
+    ],
+)
+use_repo(oci, "distroless_base", "distroless_base_linux_amd64", "distroless_base_linux_arm64")
+
+oci.pull(
+    name = "python_base",
+    digest = "sha256:80dd3c3b9c6cecb9f1667e9290b3bc61b78c2678c02cbdae5f0fea92cc6734ab",
+    image = "ubuntu",
+    platforms = [
+        "linux/arm64/v8",
+        "linux/amd64",
+    ],
+)
+use_repo(oci, "python_base", "python_base_linux_amd64", "python_base_linux_arm64_v8")
