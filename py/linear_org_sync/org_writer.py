@@ -51,6 +51,7 @@ def format_issue(issue: Issue) -> str:
 
 
 def write_org_file(path: pathlib.Path, issues: list[Issue], source_label: str) -> None:
+    issues = sorted(issues, key=lambda i: (i.priority if i.priority != 0 else 5, i.title.lower()))
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     header = f"# Linear sync: {source_label} — {timestamp}\n\n"
     content = header + "".join(format_issue(i) for i in issues)

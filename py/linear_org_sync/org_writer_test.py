@@ -117,3 +117,50 @@ def test_write_org_file_overwrites_existing(tmp_path):
     content = output.read_text()
     assert "old content" not in content
     assert "NEW-1" in content
+
+
+def test_write_org_file_sorts_by_priority(tmp_path):
+    output = tmp_path / "test.org"
+    issues = [
+        _make_issue(identifier="ENG-5", title="No priority issue", priority=0),
+        _make_issue(identifier="ENG-4", title="Low priority issue", priority=4),
+        _make_issue(identifier="ENG-3", title="Medium priority issue", priority=3),
+        _make_issue(identifier="ENG-2", title="High priority issue", priority=2),
+        _make_issue(identifier="ENG-1", title="Urgent issue", priority=1),
+    ]
+    write_org_file(output, issues, "test")
+    content = output.read_text()
+    pos_urgent = content.index("ENG-1")
+    pos_high = content.index("ENG-2")
+    pos_medium = content.index("ENG-3")
+    pos_low = content.index("ENG-4")
+    pos_none = content.index("ENG-5")
+    assert pos_urgent < pos_high < pos_medium < pos_low < pos_none
+
+
+def test_write_org_file_sorts_alphabetically_within_priority(tmp_path):
+    output = tmp_path / "test.org"
+    issues = [
+        _make_issue(identifier="ENG-3", title="Zebra task", priority=2),
+        _make_issue(identifier="ENG-1", title="Apple task", priority=2),
+        _make_issue(identifier="ENG-2", title="Mango task", priority=2),
+    ]
+    write_org_file(output, issues, "test")
+    content = output.read_text()
+    pos_apple = content.index("Apple task")
+    pos_mango = content.index("Mango task")
+    pos_zebra = content.index("Zebra task")
+    assert pos_apple < pos_mango < pos_zebra
+
+
+def test_write_org_file_no_priority_sorts_after_low(tmp_path):
+    output = tmp_path / "test.org"
+    issues = [
+        _make_issue(identifier="ENG-2", title="No priority issue", priority=0),
+        _make_issue(identifier="ENG-1", title="Low priority issue", priority=4),
+    ]
+    write_org_file(output, issues, "test")
+    content = output.read_text()
+    pos_low = content.index("ENG-1")
+    pos_none = content.index("ENG-2")
+    assert pos_low < pos_none
