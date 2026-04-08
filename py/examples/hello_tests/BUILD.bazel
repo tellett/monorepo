@@ -1,0 +1,46 @@
+load("@aspect_rules_py//py:defs.bzl", "py_binary", "py_library", "py_pytest_main", "py_test")
+
+py_library(
+    name = "hello_tests",
+    srcs = [
+        "__init__.py",
+        "greeter.py",
+    ],
+    imports = ["../.."],
+    visibility = ["//:__subpackages__"],
+)
+
+py_binary(
+    name = "hello_tests_bin",
+    srcs = ["__main__.py"],
+    main = "__main__.py",
+    visibility = ["//:__subpackages__"],
+    deps = [
+        ":hello_tests",
+        "@pip//absl_py",
+    ],
+)
+
+py_test(
+    name = "greeter_test",
+    srcs = ["greeter_test.py"],
+    deps = [":hello_tests"],
+)
+
+py_pytest_main(
+    name = "__test__",
+    deps = ["@pip//pytest"],
+)
+
+py_test(
+    name = "hello_tests_test",
+    srcs = [
+        "greeter_test.py",
+        ":__test__",
+    ],
+    main = ":__test__.py",
+    deps = [
+        ":__test__",
+        ":hello_tests",
+    ],
+)

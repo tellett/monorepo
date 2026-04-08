@@ -1,0 +1,15 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "httpserver",
+    srcs = ["httpserver.go"],
+    importpath = "example.com/monorepo/go/net/httpserver",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//go/logging/loggerfx",
+        "//go/net/httpserver/handlers/health",
+        "//go/net/httpserver/handlers/terminator",
+        "@org_uber_go_fx//:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)

@@ -1,0 +1,12 @@
+load("@rules_go//go:def.bzl", "go_library")
+
+go_library(
+    name = "greeter",
+    srcs = ["greeter.go"],
+    importpath = "example.com/monorepo/go/examples/hello/handlers/greeter",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@org_uber_go_fx//:go_default_library",
+        "@org_uber_go_zap//:go_default_library",
+    ],
+)

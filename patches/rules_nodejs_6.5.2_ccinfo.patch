@@ -1,0 +1,9 @@
+--- a/nodejs/toolchain.bzl
++++ b/nodejs/toolchain.bzl
+@@ -100,6 +100,5 @@
+         headers = struct(
+             providers_map = {
+-                "CcInfo": ctx.attr.headers[CcInfo],
+                 "DefaultInfo": ctx.attr.headers[DefaultInfo],
+             },
+         ) if ctx.attr.headers else None,
