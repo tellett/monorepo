@@ -33,7 +33,7 @@ _ASSIGNED_QUERY = f"""
 query AssignedIssues {{
     viewer {{
         assignedIssues(
-            filter: {{ state: {{ type: {{ nin: ["completed", "cancelled"] }} }} }}
+            filter: {{ state: {{ type: {{ nin: ["completed", "canceled"] }} }} }}
         ) {{
             nodes {{ {_ISSUE_FIELDS} }}
         }}
@@ -46,7 +46,7 @@ query TeamIssues($slug: String!) {{
     teams(filter: {{ key: {{ eq: $slug }} }}) {{
         nodes {{
             issues(
-                filter: {{ state: {{ type: {{ nin: ["completed", "cancelled"] }} }} }}
+                filter: {{ state: {{ type: {{ nin: ["completed", "canceled"] }} }} }}
             ) {{
                 nodes {{ {_ISSUE_FIELDS} }}
             }}
@@ -59,7 +59,7 @@ _PROJECT_QUERY = f"""
 query ProjectIssues($id: String!) {{
     project(id: $id) {{
         issues(
-            filter: {{ state: {{ type: {{ nin: ["completed", "cancelled"] }} }} }}
+            filter: {{ state: {{ type: {{ nin: ["completed", "canceled"] }} }} }}
         ) {{
             nodes {{ {_ISSUE_FIELDS} }}
         }}
