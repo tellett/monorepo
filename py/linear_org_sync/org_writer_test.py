@@ -1,6 +1,6 @@
 import pathlib
 
-from py.linear_org_sync.org_writer import Issue, format_issue, write_org_file
+from py.linear_org_sync.org_writer import Issue, Link, format_issue, write_org_file
 
 
 def _make_issue(**kwargs) -> Issue:
@@ -88,6 +88,13 @@ def test_properties_drawer_contains_id_and_url():
     assert ":LINEAR_ID: ENG-42" in text
     assert ":LINEAR_URL: https://linear.app/x/ENG-42" in text
     assert ":END:" in text
+
+
+def test_format_issue_no_links_produces_no_link_properties():
+    issue = _make_issue()
+    text = format_issue(issue)
+    assert ":GITHUB_PR" not in text
+    assert ":OTHER_LINK" not in text
 
 
 def test_write_org_file_contains_all_issues(tmp_path):

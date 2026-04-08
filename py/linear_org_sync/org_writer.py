@@ -12,6 +12,11 @@ _PRIORITY_MAP = {
 }
 
 
+class Link(BaseModel):
+    url: str
+    title: str
+
+
 class Issue(BaseModel):
     identifier: str
     title: str
@@ -19,6 +24,8 @@ class Issue(BaseModel):
     url: str
     state_name: str
     state_type: str
+    github_prs: list[Link] = []
+    other_links: list[Link] = []
 
 
 def _org_todo_keyword(issue: Issue) -> str:
