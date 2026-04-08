@@ -171,3 +171,62 @@ def test_write_org_file_no_priority_sorts_after_low(tmp_path):
     pos_low = content.index("ENG-1")
     pos_none = content.index("ENG-2")
     assert pos_low < pos_none
+
+
+def test_format_issue_single_pr_uses_bare_key():
+    issue = _make_issue(
+        github_prs=[Link(url="https://github.com/org/repo/pull/9", title="Fix: org/repo#9")]
+    )
+    text = format_issue(issue)
+    assert ":GITHUB_PR: https://github.com/org/repo/pull/9" in text
+    assert ":GITHUB_PR_1:" not in text
+
+
+def test_format_issue_multiple_prs_uses_indexed_keys():
+    issue = _make_issue(
+        github_prs=[
+            Link(url="https://github.com/org/repo/pull/9", title="PR 1"),
+            Link(url="https://github.com/org/repo/pull/12", title="PR 2"),
+        ]
+    )
+    text = format_issue(issue)
+    assert ":GITHUB_PR_1: https://github.com/org/repo/pull/9" in text
+    assert ":GITHUB_PR_2: https://github.com/org/repo/pull/12" in text
+    assert ":GITHUB_PR: https" not in text
+
+
+def test_format_issue_single_other_link_uses_bare_key():
+    issue = _make_issue(
+        other_links=[Link(url="https://notion.so/some-doc", title="Doc")]
+    )
+    text = format_issue(issue)
+    assert ":OTHER_LINK: https://notion.so/some-doc" in text
+    assert ":OTHER_LINK_1:" not in text
+
+
+def test_format_issue_multiple_other_links_uses_indexed_keys():
+    issue = _make_issue(
+        other_links=[
+            Link(url="https://notion.so/doc-a", title="Doc A"),
+            Link(url="https://docs.google.com/doc-b", title="Doc B"),
+        ]
+    )
+    text = format_issue(issue)
+    assert ":OTHER_LINK_1: https://notion.so/doc-a" in text
+    assert ":OTHER_LINK_2: https://docs.google.com/doc-b" in text
+    assert ":OTHER_LINK: https" not in text
+
+
+def test_format_issue_mixed_links_index_types_independently():
+    issue = _make_issue(
+        github_prs=[
+            Link(url="https://github.com/org/repo/pull/9", title="PR 1"),
+            Link(url="https://github.com/org/repo/pull/12", title="PR 2"),
+        ],
+        other_links=[Link(url="https://notion.so/doc", title="Doc")],
+    )
+    text = format_issue(issue)
+    assert ":GITHUB_PR_1: https://github.com/org/repo/pull/9" in text
+    assert ":GITHUB_PR_2: https://github.com/org/repo/pull/12" in text
+    assert ":OTHER_LINK: https://notion.so/doc" in text
+    assert ":OTHER_LINK_1:" not in text

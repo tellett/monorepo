@@ -45,14 +45,26 @@ def _org_priority(priority: int) -> str:
     return ""
 
 
+def _link_properties(name: str, links: list[Link]) -> str:
+    if not links:
+        return ""
+    if len(links) == 1:
+        return f"  :{name}: {links[0].url}\n"
+    return "".join(f"  :{name}_{i}: {link.url}\n" for i, link in enumerate(links, 1))
+
+
 def format_issue(issue: Issue) -> str:
     keyword = _org_todo_keyword(issue)
     priority = _org_priority(issue.priority)
+    pr_props = _link_properties("GITHUB_PR", issue.github_prs)
+    link_props = _link_properties("OTHER_LINK", issue.other_links)
     return (
         f"* {keyword}{priority} {issue.title}\n"
         f"  :PROPERTIES:\n"
         f"  :LINEAR_ID: {issue.identifier}\n"
         f"  :LINEAR_URL: {issue.url}\n"
+        f"{pr_props}"
+        f"{link_props}"
         f"  :END:\n"
     )
 

@@ -1,8 +1,13 @@
 from __future__ import annotations
 
 import httpx
+import re
 
-from py.linear_org_sync.org_writer import Issue
+from py.linear_org_sync.org_writer import Issue, Link
+
+_GITHUB_PR_RE = re.compile(r"github\.com/.+/pull/\d+")
+_URL_RE = re.compile(r"https?://\S+")
+_TRAILING_PUNCT_RE = re.compile(r"[.,;:!?)]+$")
 
 _LINEAR_API_URL = "https://api.linear.app/graphql"
 
@@ -14,6 +19,13 @@ _ISSUE_FIELDS = """
     state {
         name
         type
+    }
+    description
+    attachments {
+        nodes {
+            title
+            url
+        }
     }
 """
 
@@ -56,7 +68,32 @@ query ProjectIssues($id: String!) {{
 """
 
 
+def _extract_links(node: dict) -> tuple[list[Link], list[Link]]:
+    seen: dict[str, Link] = {}
+
+    for att in node.get("attachments", {}).get("nodes", []):
+        url = att.get("url", "")
+        if url:
+            seen[url] = Link(url=url, title=att.get("title", url))
+
+    for raw_url in _URL_RE.findall(node.get("description") or ""):
+        url = _TRAILING_PUNCT_RE.sub("", raw_url)
+        if url not in seen:
+            seen[url] = Link(url=url, title=url)
+
+    github_prs = []
+    other_links = []
+    for link in seen.values():
+        if _GITHUB_PR_RE.search(link.url):
+            github_prs.append(link)
+        else:
+            other_links.append(link)
+
+    return github_prs, other_links
+
+
 def _parse_issue(node: dict) -> Issue:
+    github_prs, other_links = _extract_links(node)
     return Issue(
         identifier=node["identifier"],
         title=node["title"],
@@ -64,6 +101,8 @@ def _parse_issue(node: dict) -> Issue:
         url=node["url"],
         state_name=node["state"]["name"],
         state_type=node["state"]["type"],
+        github_prs=github_prs,
+        other_links=other_links,
     )
 
 

@@ -1,6 +1,6 @@
 from unittest.mock import MagicMock, patch
 
-from py.linear_org_sync.linear_client import LinearClient
+from py.linear_org_sync.linear_client import LinearClient, _extract_links
 
 
 def _mock_response(data: dict) -> MagicMock:
@@ -17,6 +17,8 @@ def _issue_node(
     url="https://linear.app/x/ENG-1",
     state_name="Todo",
     state_type="unstarted",
+    description=None,
+    attachments=None,
 ) -> dict:
     return {
         "identifier": identifier,
@@ -24,6 +26,8 @@ def _issue_node(
         "priority": priority,
         "url": url,
         "state": {"name": state_name, "type": state_type},
+        "description": description,
+        "attachments": {"nodes": attachments or []},
     }
 
 
@@ -126,3 +130,70 @@ def test_linear_client_context_manager_closes():
         with LinearClient("lin_api_test") as client:
             client.get_assigned_issues()
         mock_close.assert_called_once()
+
+
+def test_extract_links_pr_url_goes_to_github_prs():
+    node = _issue_node(
+        attachments=[{"url": "https://github.com/org/repo/pull/9", "title": "My PR"}]
+    )
+    prs, others = _extract_links(node)
+    assert len(prs) == 1
+    assert prs[0].url == "https://github.com/org/repo/pull/9"
+    assert prs[0].title == "My PR"
+    assert others == []
+
+
+def test_extract_links_non_pr_url_goes_to_other_links():
+    node = _issue_node(
+        attachments=[{"url": "https://notion.so/some-doc", "title": "Doc"}]
+    )
+    prs, others = _extract_links(node)
+    assert prs == []
+    assert len(others) == 1
+    assert others[0].url == "https://notion.so/some-doc"
+    assert others[0].title == "Doc"
+
+
+def test_extract_links_github_issue_url_goes_to_other_links():
+    node = _issue_node(
+        attachments=[
+            {"url": "https://github.com/org/repo/issues/42", "title": "Issue"}
+        ]
+    )
+    prs, others = _extract_links(node)
+    assert prs == []
+    assert len(others) == 1
+
+
+def test_extract_links_description_url_extracted():
+    node = _issue_node(
+        description="See https://notion.so/doc for context",
+    )
+    prs, others = _extract_links(node)
+    assert len(others) == 1
+    assert others[0].url == "https://notion.so/doc"
+    assert others[0].title == "https://notion.so/doc"
+
+
+def test_extract_links_deduplication_prefers_attachment_title():
+    node = _issue_node(
+        attachments=[{"url": "https://github.com/org/repo/pull/9", "title": "My PR"}],
+        description="Check https://github.com/org/repo/pull/9 for details",
+    )
+    prs, others = _extract_links(node)
+    assert len(prs) == 1
+    assert prs[0].title == "My PR"
+
+
+def test_extract_links_no_attachments_no_description_returns_empty():
+    node = _issue_node()
+    prs, others = _extract_links(node)
+    assert prs == []
+    assert others == []
+
+
+def test_extract_links_description_strips_trailing_punctuation():
+    node = _issue_node(description="See https://notion.so/doc. For context")
+    prs, others = _extract_links(node)
+    assert len(others) == 1
+    assert others[0].url == "https://notion.so/doc"
