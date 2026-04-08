@@ -29,7 +29,7 @@ class Issue(BaseModel):
 
 
 def _org_todo_keyword(issue: Issue) -> str:
-    if issue.state_type in ("completed", "cancelled"):
+    if issue.state_type in ("completed", "canceled"):
         return "DONE"
     if issue.state_type == "started":
         if "review" in issue.state_name.lower():

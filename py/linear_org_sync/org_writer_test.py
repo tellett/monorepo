@@ -45,8 +45,8 @@ def test_todo_keyword_done():
     assert text.startswith("* DONE ")
 
 
-def test_todo_keyword_cancelled():
-    issue = _make_issue(state_type="cancelled", state_name="Cancelled")
+def test_todo_keyword_canceled():
+    issue = _make_issue(state_type="canceled", state_name="Canceled")
     text = format_issue(issue)
     assert text.startswith("* DONE ")
 
