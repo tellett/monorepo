@@ -7,7 +7,9 @@ from py.linear_org_sync.org_writer import Issue, Link
 
 _GITHUB_PR_RE = re.compile(r"github\.com/.+/pull/\d+")
 _URL_RE = re.compile(r"https?://\S+")
-_TRAILING_PUNCT_RE = re.compile(r"[.,;:!?)]+$")
+_TRAILING_PUNCT_RE = re.compile(r'[.,;:!?)">]+$')
+_MARKDOWN_LINK_RE = re.compile(r'\[[^\]]*\]\((https?://[^\s)]+)\)')
+_SLACK_LINK_RE = re.compile(r'<(https?://[^|\s>]+)(?:\|[^>]*)?>')
 
 _LINEAR_API_URL = "https://api.linear.app/graphql"
 
@@ -68,6 +70,21 @@ query ProjectIssues($id: String!) {{
 """
 
 
+def _clean_description(text: str) -> str:
+    """Normalise link markup in Linear description text before URL extraction.
+
+    Converts markdown links [label](url) and Slack-format links <url|label>
+    to bare URLs so the URL scanner doesn't capture surrounding syntax.
+
+    Note: Slack links of the form <url|label>" leave a trailing '"' after the
+    closing '>' is consumed by _SLACK_LINK_RE. That residual character is
+    cleaned downstream by _TRAILING_PUNCT_RE in _extract_links.
+    """
+    text = _MARKDOWN_LINK_RE.sub(r'\1', text)
+    text = _SLACK_LINK_RE.sub(r'\1', text)
+    return text
+
+
 def _extract_links(node: dict) -> tuple[list[Link], list[Link]]:
     seen: dict[str, Link] = {}
 
@@ -76,7 +93,7 @@ def _extract_links(node: dict) -> tuple[list[Link], list[Link]]:
         if url:
             seen[url] = Link(url=url, title=att.get("title", url))
 
-    for raw_url in _URL_RE.findall(node.get("description") or ""):
+    for raw_url in _URL_RE.findall(_clean_description(node.get("description") or "")):
         url = _TRAILING_PUNCT_RE.sub("", raw_url)
         if url not in seen:
             seen[url] = Link(url=url, title=url)
